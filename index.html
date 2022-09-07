@@ -207,8 +207,8 @@ app.controller('controller', ['$scope', '$http', '$timeout', '$interval', functi
             method: 'GET',
             url: '//api.openweathermap.org/data/2.5/weather',
             params: {
-                lat: position.coords.latitude,
-                lon: position.coords.longitude,
+                lat: $scope.position.coords.latitude,
+                lon: $scope.position.coords.longitude,
                 units: 'metric',
                 appid: '4f08bf0829032ef19cda55a9279aae71'
             }
