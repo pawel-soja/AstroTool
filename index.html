@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js" integrity="sha512-KZmyTq3PLx9EZl0RHShHQuXtrvdJ+m35tuOiwlcZfs/rE7NZv29ygNA8SFCkMXTnYZQK2OX0Gm2qKGfvWEtRXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+    body {
+        background-color: black;
+        color: red;
+    }
+
+    table:first-child  td:first-child
+    {
+        text-align: right;
+    }
+
+    table
+    {
+        white-space: pre;
+    }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AstroTool</title>
+</head>
+<body ng-app="app" ng-controller="controller">
+
+<table>
+    <tr>
+        <td>Latitude:</td>
+        <td>{{position.coords.latitude | latdeg}} ({{position.coords.latitude}})</td>
+    </tr>
+    <tr>
+        <td>Longitude:</td>
+        <td>{{position.coords.longitude | longdeg}} ({{position.coords.longitude}})</td>
+    </tr>
+    <tr>
+        <td>Altitude:</td>
+        <td>{{position.coords.altitude | number: 0}} m</td>
+    </tr>
+    <tr>
+        <td>Date:</td>
+        <td>{{ currentDate | date:'MM/dd/yyyy' : 'GMT'}} GMT ({{ currentDate | date:'MM/dd/yyyy'}})</td>
+    </tr>
+    <tr>
+        <td>Time:</td>
+        <td>{{ currentDate | date:'HH:mm:ss' : 'GMT'}} GMT ({{ currentDate | date:'HH:mm:ss'}})</td>
+    </tr>
+
+    <tr>
+        <td>Temperature:</td>
+        <td>{{weather.main.temp}} °C</td>
+    </tr>
+
+    <tr>
+        <td>Humidity:</td>
+        <td>{{weather.main.humidity}} %RH</td>
+    </tr>
+</table>
+{{compassdir}}
+<canvas id="compass" style="border: 1px solid red" width="400" height="400"></canvas>
+
+<script>
+
+function Compass(ctx)
+{
+    var self = this;
+    var compassdir = 0;
+    
+    this.draw = function()
+    {
+        var width = ctx.canvas.width;
+        var height = ctx.canvas.height;
+
+        var px = width / 2;
+        var py = height / 2;
+
+        var cf = {
+            scale: {
+                size0: width / 2 - 30 + 15, // text
+                size1: width / 2 - 30 +  0, // line
+                size2: width / 2 - 30 - 10, // line
+                size3: width / 2 - 30 - 10 - 20
+            }
+        };
+
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.beginPath();
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = 'white';
+
+        //var offset = (compassdir + 90) / 360 * 2 * Math.PI;
+        var offset = compassdir;
+        for(var i=0; i<12; ++i)
+        {
+            var sin = Math.sin(2*Math.PI * i / 12 + offset);
+            var cos = Math.cos(2*Math.PI * i / 12 + offset);
+            var x0 = px + (cf.scale.size0) * sin;
+            var y0 = py - (cf.scale.size0) * cos;
+            var x1 = px + (cf.scale.size1) * sin;
+            var y1 = py - (cf.scale.size1) * cos;
+            var x2 = px + (cf.scale.size2) * sin;
+            var y2 = py - (cf.scale.size2) * cos;
+            var x3 = px + (cf.scale.size3) * sin;
+            var y3 = py - (cf.scale.size3) * cos;
+            
+            ctx.font = "15px Arial";
+            ctx.fillText(parseInt(i*360 / 12), x0, y0);
+
+            if ((i % 3) == 0)
+            {
+                ctx.font = "35px Arial";
+                ctx.fillText(['N', 'E', 'S', 'W'][parseInt(i/3)], x3, y3);
+            }
+            
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+        }
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'white';
+        ctx.closePath()
+        ctx.stroke();
+    };
+
+    let sensor = new AbsoluteOrientationSensor({ frequency: 30 });
+    sensor.addEventListener('reading', function(e) {
+        var q = e.target.quaternion;
+        var a = Math.atan2(2*q[0]*q[1] + 2*q[2]*q[3], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+        compassdir = a;
+        self.draw();
+    });
+    sensor.start();
+
+/*
+    if (window.DeviceOrientationEvent) {
+        // Listen for the deviceorientation event and handle the raw data
+        window.addEventListener('deviceorientation', function(eventData) {
+            compassdir = event.webkitCompassHeading ? event.webkitCompassHeading : event.alpha;
+            //$scope.$apply;
+            self.draw();
+        });
+    }
+    */
+}
+
+new Compass(document.getElementById("compass").getContext('2d'));
+
+var app = angular.module('app', []);
+
+function geoToAbsString(degree)
+{
+    var geoSeconds = Math.abs(parseInt(degree * 60 * 60));
+    const pad = '   ';
+
+    return (pad + parseInt(geoSeconds/60/60)      ).slice(-3) + "° " +
+           (pad + parseInt(geoSeconds/60    ) % 60).slice(-2) + "' " +
+           (pad + parseInt(geoSeconds       ) % 60).slice(-2) + "'' ";
+}
+
+app.filter('latdeg', function()
+{
+    return function(degree)
+    {
+        return geoToAbsString(degree) + (degree > 0 ? 'N' : 'S');
+    }
+});
+
+app.filter('longdeg', function()
+{
+    return function(degree)
+    {
+        return geoToAbsString(degree) + (degree > 0 ? 'E' : 'W');
+    }
+});
+
+app.controller('controller', ['$scope', '$http', '$timeout', '$interval', function($scope, $http, $timeout, $interval){
+    $scope.position = {};
+
+    function updateGeo()
+    {
+        navigator.geolocation.getCurrentPosition(function(position)
+        {
+            $scope.position = position;
+
+            $scope.$apply();
+
+            $http({
+                method: 'GET',
+                url: '//api.openweathermap.org/data/2.5/weather',
+                //url: 'http://openweathermap.org/data/2.5/onecall',
+                params: {
+                    //mode: 'json',
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude,
+                    units: 'metric',
+                    appid: '4f08bf0829032ef19cda55a9279aae71'
+                }
+            }).then(function(response){
+                
+                $scope.weather = response.data;
+                console.log(response.data);
+            });
+        });
+        $timeout(updateGeo, 10000);
+    }
+
+    function updateTime()
+    {
+        $scope.currentDate = (new Date());
+        $timeout(updateTime, 200);
+    }
+
+    updateGeo();
+    updateTime();
+
+    
+
+}]);
+
+</script>
+</body>
+</html>
