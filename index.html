@@ -179,46 +179,49 @@ app.filter('longdeg', function()
 
 app.controller('controller', ['$scope', '$http', '$timeout', '$interval', function($scope, $http, $timeout, $interval){
     $scope.position = {};
+    var gotGeo = false;
 
     function updateGeo()
     {
         navigator.geolocation.getCurrentPosition(function(position)
         {
             $scope.position = position;
-
+            if (gotGeo == false)
+            {
+                gotGeo = true;
+                updateWeather();
+            }
             $scope.$apply();
-
-            $http({
-                method: 'GET',
-                url: '//api.openweathermap.org/data/2.5/weather',
-                //url: 'http://openweathermap.org/data/2.5/onecall',
-                params: {
-                    //mode: 'json',
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude,
-                    units: 'metric',
-                    appid: '4f08bf0829032ef19cda55a9279aae71'
-                }
-            }).then(function(response){
-                
-                $scope.weather = response.data;
-                console.log(response.data);
-            });
         });
-        $timeout(updateGeo, 10000);
+        $timeout(updateGeo, 10 * 1000);
+    }
+
+    function updateWeather()
+    {
+        $http({
+            method: 'GET',
+            url: '//api.openweathermap.org/data/2.5/weather',
+            params: {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                units: 'metric',
+                appid: '4f08bf0829032ef19cda55a9279aae71'
+            }
+        }).then(function(response){
+            $scope.weather = response.data;
+            console.log(response.data);
+        });
+        $timeout(updateWeather, 30 * 1000);
     }
 
     function updateTime()
     {
         $scope.currentDate = (new Date());
-        $timeout(updateTime, 200);
+        $timeout(updateTime, 0.2 * 1000);
     }
 
     updateGeo();
     updateTime();
-
-    
-
 }]);
 
 </script>
