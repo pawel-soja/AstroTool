@@ -7,6 +7,7 @@
     body {
         background-color: black;
         color: red;
+        margin: 10px;
     }
 
     table:first-child  td:first-child
@@ -17,6 +18,13 @@
     table
     {
         white-space: pre;
+    }
+
+    canvas
+    {
+        max-width: 100%;
+        margin: 0px auto;
+        display: block;
     }
     </style>
     <meta charset="UTF-8">
@@ -62,8 +70,8 @@
         <td>{{weather.clouds.all}} %</td>
     </tr>
 </table>
-{{compassdir}}
-<canvas id="compass" style="border: 1px solid red" width="400" height="400"></canvas>
+
+<canvas id="compass" style="border: 0px solid red" width="400" height="400"></canvas>
 
 <script>
 
@@ -91,6 +99,16 @@ function Compass(ctx)
 
 
         ctx.clearRect(0, 0, width, height);
+        
+        ctx.beginPath();
+        ctx.strokeStyle = '#500';
+        ctx.moveTo(px, height);
+        ctx.lineTo(px, 0);
+        ctx.moveTo(0, py);
+        ctx.lineTo(width, py);
+        ctx.closePath();
+        ctx.stroke();
+
         ctx.beginPath();
 
         ctx.textAlign = "center";
@@ -138,6 +156,8 @@ function Compass(ctx)
         compassdir = a;
         self.draw();
     });
+
+    self.draw();
     sensor.start();
 
 /*
