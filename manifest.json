@@ -1,0 +1,22 @@
+{
+    "short_name": "AstroTool",
+    "name": "Astro Tool",
+    "icons": [
+      {
+        "src": "/icon-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/icon.png",
+        "type": "image/png",
+        "sizes": "400x400"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#FFFFFF",
+    "display": "standalone",
+    "theme_color": "#0095da",
+    "orientation": "portrait",
+    "scope": "/"
+  }
