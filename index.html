@@ -5,6 +5,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js" integrity="sha512-KZmyTq3PLx9EZl0RHShHQuXtrvdJ+m35tuOiwlcZfs/rE7NZv29ygNA8SFCkMXTnYZQK2OX0Gm2qKGfvWEtRXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
     <style>
     body {
         background-color: black;
@@ -50,11 +51,19 @@
     </tr>
     <tr>
         <td>Date:</td>
-        <td>{{ currentDate | date:'MM/dd/yyyy' : 'GMT'}} GMT ({{ currentDate | date:'MM/dd/yyyy'}})</td>
+        <td>{{ currentDate | date:'MM/dd/yyyy'}} ({{ currentDate | date:'MM/dd/yyyy' : 'GMT'}} GMT)</td>
     </tr>
     <tr>
         <td>Time:</td>
-        <td>{{ currentDate | date:'HH:mm:ss' : 'GMT'}} GMT ({{ currentDate | date:'HH:mm:ss'}})</td>
+        <td>{{ currentDate | date:'HH:mm:ss'}} ({{ currentDate | date:'HH:mm:ss' : 'GMT'}} GMT)</td>
+    </tr>
+    <tr>
+        <td>Time zone:</td>
+        <td>{{ timeZone }} Standard Time</td>
+    </tr>
+    <tr>
+        <td>Daylight saving:</td>
+        <td>{{ isDST ? 'Yes' : 'No'}}</td>
     </tr>
 
     <tr>
@@ -243,7 +252,11 @@ app.controller('controller', ['$scope', '$http', '$timeout', '$interval', functi
 
     function updateTime()
     {
-        $scope.currentDate = (new Date());
+        let utcOffset = moment("2019-11-01T07:00:00.000Z").utcOffset() / 60;
+        //$scope.currentDate = (new Date());
+        $scope.currentDate = moment().local().toDate();
+        $scope.isDST = moment().isDST();
+        $scope.timeZone = utcOffset >= 0 ? `UTC+${String(utcOffset).padStart(2, '0')}` : `UTC-${String(-utcOffset).padStart(2, '0')}`;
         $timeout(updateTime, 0.2 * 1000);
     }
 
