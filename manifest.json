@@ -13,10 +13,10 @@
         "sizes": "400x400"
       }
     ],
-    "start_url": "/",
+    "start_url": "/AstroTool/",
     "background_color": "#FFFFFF",
     "display": "standalone",
     "theme_color": "#0095da",
     "orientation": "portrait",
-    "scope": "/"
+    "scope": "/AstroTool/"
   }
